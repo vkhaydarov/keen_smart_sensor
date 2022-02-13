@@ -52,7 +52,7 @@ class ServiceArchiving(Service):
         while not started:
             current_config = self.get_current_planteye_config()
             if current_config is not None:
-                current_config['processors']['archiving'] = {
+                current_config['processors']['100_archiving'] = {
                     'name': 'archiver',
                     'type': 'save_on_disk',
                     'parameters': {
@@ -67,11 +67,11 @@ class ServiceArchiving(Service):
         if current_config is None:
             return False
         if 'processors' not in current_config:
-            return False
+            return True
         if 'archiving' in current_config['processors']:
-            current_config['processors'].pop('archiving')
+            current_config['processors'].pop('100_archiving')
             self.set_current_planteye_config(current_config)
-            return False
+            return True
         else:
             return True
 
