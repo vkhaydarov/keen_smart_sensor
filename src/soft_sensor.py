@@ -1,4 +1,4 @@
-from mtypy.opcua_server_pea import OPCUAServerPEA
+from mtppy.opcua_server_pea import OPCUAServerPEA
 
 from service_raw_data_acquisition import ServiceRawDataAcquisition
 from service_archiving import ServiceArchiving

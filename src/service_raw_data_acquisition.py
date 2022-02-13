@@ -1,7 +1,7 @@
-from mtypy.service import Service
-from mtypy.procedure import Procedure
-from mtypy.operation_elements import *
-from mtypy.indicator_elements import *
+from mtppy.service import Service
+from mtppy.procedure import Procedure
+from mtppy.operation_elements import *
+from mtppy.indicator_elements import *
 import time
 import requests
 import base64
