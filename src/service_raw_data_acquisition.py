@@ -4,18 +4,35 @@ from mtypy.operation_elements import *
 from mtypy.indicator_elements import *
 import time
 import requests
+import base64
+import numpy as np
+from flask import Flask, Response
+from threading import Thread
+import cv2
 
 
 class ServiceRawDataAcquisition(Service):
     def __init__(self, tag_name, tag_description):
         super().__init__(tag_name, tag_description)
+        self.planteye_endpoint = None
+        self.stop_data_acquisition_flag = True
+        self.web_server = None
         self.add_free_run_procedure()
         self.add_snapshot_procedure()
-        self.planteye_endpoint = '127.0.0.1:5000/get_frame'
-        self.run_webserver()
+        self.web_server_host = '0.0.0.0'
+        self.web_server_port = 5002
+        self.place_holder_img = self.load_place_holder_image()
+        self.frame_to_show = self.place_holder_img
+        Thread(target=self.run_webserver).start()
+
+    def load_place_holder_image(self):
+        with open('../res/novid.jpg', 'rb') as img_file:
+            return img_file.read()
+
+    def set_planteye_endpoint(self, planteye_endpoint):
+        self.planteye_endpoint = planteye_endpoint
 
     def add_free_run_procedure(self):
-        # Free run procedure
         proc_free_run = Procedure(0, 'free_run', is_self_completing=False, is_default=True)
         proc_parameters = [
             DIntServParam('shutter_speed_setpoint', v_min=1, v_max=60000000, v_scl_min=0, v_scl_max=60000000,
@@ -25,13 +42,14 @@ class ServiceRawDataAcquisition(Service):
             DIntServParam('roi_x_delta', v_min=0, v_max=2448, v_scl_min=0, v_scl_max=2448, v_unit=23),
             DIntServParam('roi_y_delta', v_min=0, v_max=2048, v_scl_min=0, v_scl_max=2048, v_unit=23),
             DIntServParam('gain_setpoint', v_min=0, v_max=48, v_scl_min=0, v_scl_max=48, v_unit=23),
-            BinServParam('auto_brigthness_setpoint', v_state_0='off', v_state_1='on')
-            ]
+            BinServParam('auto_brightness_setpoint', v_state_0='off', v_state_1='on'),
+            AnaServParam('time_interval_setpoint', v_min=0, v_max=3600, v_scl_min=0, v_scl_max=3600, v_unit=23),
+        ]
         [proc_free_run.add_procedure_parameter(proc_param) for proc_param in proc_parameters]
 
         report_values = [DIntView('shutter_speed_feedback', v_scl_min=1, v_scl_max=60000000, v_unit=23),
                          DIntView('gain_feedback', v_scl_min=0, v_scl_max=48, v_unit=23),
-                         BinView('auto_brigthness_feedback', v_state_0='off', v_state_1='on'),
+                         BinView('auto_brightness_feedback', v_state_0='off', v_state_1='on'),
                          StringView('webserver_endpoint'),
                          ]
         [proc_free_run.add_report_value(report_value) for report_value in report_values]
@@ -39,7 +57,6 @@ class ServiceRawDataAcquisition(Service):
         self.add_procedure(proc_free_run)
 
     def add_snapshot_procedure(self):
-        # Snapshot run procedure
         proc_snapshot = Procedure(1, 'snapshot', is_self_completing=True, is_default=False)
         proc_parameters = [
             DIntServParam('shutter_speed_setpoint', v_min=1, v_max=60000000, v_scl_min=0, v_scl_max=60000000,
@@ -50,7 +67,7 @@ class ServiceRawDataAcquisition(Service):
             DIntServParam('roi_y_delta', v_min=0, v_max=2048, v_scl_min=0, v_scl_max=2048, v_unit=23),
             DIntServParam('gain_setpoint', v_min=0, v_max=48, v_scl_min=0, v_scl_max=48, v_unit=23),
             BinServParam('auto_brigthness_setpoint', v_state_0='off', v_state_1='on')
-            ]
+        ]
         [proc_snapshot.add_procedure_parameter(proc_param) for proc_param in proc_parameters]
 
         report_values = [DIntView('shutter_speed_feedback', v_scl_min=1, v_scl_max=60000000, v_unit=23),
@@ -61,6 +78,21 @@ class ServiceRawDataAcquisition(Service):
         [proc_snapshot.add_report_value(report_value) for report_value in report_values]
 
         self.add_procedure(proc_snapshot)
+
+    def run_webserver(self):
+        self.web_server = Flask('Smart Camera - Webserver')
+        self.web_server.add_url_rule(rule='/',
+                                     endpoint='Video feed',
+                                     view_func=lambda: Response(self.video_feed_gen(),
+                                                                mimetype='multipart/x-mixed-replace; boundary=frame')
+                                     )
+        self.web_server.run(host=self.web_server_host, port=self.web_server_port)
+
+    def video_feed_gen(self):
+        while True:
+            time.sleep(self.procedures[0].procedure_parameters['time_interval_setpoint'].get_v_out())
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + self.frame_to_show + b'\r\n')
 
     def idle(self):
         print('- Idle -')
@@ -74,81 +106,102 @@ class ServiceRawDataAcquisition(Service):
 
     def starting(self):
         print('- Starting -')
-        self.procedures[0].report_values['webserver_endpoint'].set_v(self.planteye_endpoint)
-        self.configure_planteye()
+        self.apply_procedure_parameters()
+        web_server = f'{self.web_server_host}:{self.web_server_port}'
+        self.procedures[0].report_values['webserver_endpoint'].set_v(web_server)
         self.state_machine.start()
 
-    def configure_planteye(self):
-        pass
+    def apply_procedure_parameters(self):
+        procedure = self.procedure_control.procedures[self.procedure_control.get_procedure_cur()]
+        for parameter in procedure.procedure_parameters.values():
+            parameter.set_v_out()
 
-    def run_webserver(self):
-        pass
+    def get_frame(self):
+        try:
+            res = requests.get(self.planteye_endpoint+'/get_frame')
+            if not res.ok:
+                print('Not 200 status response from PlanyEye')
+                return self.place_holder_img
+        except Exception:
+            print('No request response from PlanyEye')
+            return self.place_holder_img
 
-    def request_frame_from_planteye(self):
-        res = requests.get('http://127.0.0.1:5000/get_frame').json()
-        frame = res['camera']['data']['frame']['value'][0:100]
-        print(frame)
-        return frame
-
-    def update_frame(self):
-        frame = self.request_frame_from_planteye()
+        try:
+            frame_str = res.json()['camera']['data']['frame']['value']
+            frame_raw = base64.b64decode(frame_str)
+            frame_np = np.frombuffer(frame_raw, dtype=np.uint8)
+            frame_bytes = frame_np.tobytes()
+            print('PlantEye returned proper image')
+            return frame_bytes
+        except ConnectionError:
+            print('PlantEye is unreachable')
+            return self.place_holder_img
+        except Exception:
+            print('Cannot convert PlantEye response into image')
+            return self.place_holder_img
 
     def execute(self):
         print('- Execute -')
-
         print(f'ProcedureCur is {self.procedure_control.get_procedure_cur()}')
+        self.start_data_acquisition()
+
+    def start_data_acquisition(self):
+        self.stop_data_acquisition_flag = False
         if self.procedure_control.get_procedure_cur() == 0:
             self.execute_free_run()
         elif self.procedure_control.get_procedure_cur() == 1:
             self.execute_snapshot()
 
+    def stop_data_acquisition(self):
+        self.stop_data_acquisition_flag = True
+        self.procedures[0].report_values['webserver_endpoint'].set_v('')
+
     def execute_free_run(self):
-        cycle = 0
-        while True:
-            if self.thread_ctrl.get_flag('execute'):
-                break
-            print('Cycle %i' % cycle)
-            self.update_frame()
-            cycle += 1
-            time.sleep(1)
+        while not self.stop_data_acquisition_flag:
+            self.frame_to_show = self.get_frame()
+            time.sleep(self.procedures[0].procedure_parameters['time_interval_setpoint'].get_v_out())
 
     def execute_snapshot(self):
-        self.update_frame()
+        self.frame_to_show = self.get_frame()
         self.state_machine.complete()
 
     def completing(self):
-        self.procedures[0].report_values['webserver_endpoint'].set_v('')
+        self.stop_data_acquisition()
         self.state_machine.complete()
 
     def completed(self):
         pass
 
     def pausing(self):
-        pass
+        self.stop_data_acquisition()
+        self.state_machine.pause()
 
     def paused(self):
         pass
 
     def resuming(self):
-        pass
+        self.start_data_acquisition()
 
     def holding(self):
-        pass
+        self.stop_data_acquisition()
+        self.state_machine.hold()
 
     def held(self):
         pass
 
     def unholding(self):
-        pass
+        self.start_data_acquisition()
 
     def stopping(self):
-        pass
+        self.stop_data_acquisition()
+        self.state_machine.stop()
 
     def stopped(self):
         pass
 
     def aborting(self):
-        pass
+        self.stop_data_acquisition()
+        self.state_machine.abort()
 
     def aborted(self):
         pass
