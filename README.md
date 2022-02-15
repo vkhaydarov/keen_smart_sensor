@@ -6,6 +6,7 @@ To run the soft sensor third-party packages are required. To install them use th
 ```bash
 pip install -r requirements.txt
 ```
+The smart sensor expects to have a KEEN smart camera running. Its RestAPI endpoint should be specified in main.py. By default it is assumed that both Smart Sensor and Smart Camera instances run under the same ip address.
 
 ## Usage
 To run the soft sensor simply execute the main code from the folder /src:
