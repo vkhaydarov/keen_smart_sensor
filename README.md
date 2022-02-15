@@ -11,9 +11,9 @@ The smart sensor expects to have a KEEN smart camera running. Its RestAPI endpoi
 ## Usage
 To run the soft sensor simply execute the main code from the folder /src:
 ```python
-python main.py
+python soft-sensor.py
 ```
-To generate the MTP file please run the script from the folder /src:
+To generate the MTP file please run the script from the folder /src (not yet implemented):
 ```python
 python mtp-generate.py
 ```
