@@ -22,8 +22,7 @@ class ServiceArchiving(Service):
             StringServParam('data_format'),
         ]
         [proc_trigger.add_procedure_parameter(proc_param) for proc_param in proc_parameters]
-        report_values = [DIntView('WQC', v_scl_min=0, v_scl_max=255, v_unit=23),
-                         StringView('status_message'),
+        report_values = [StringView('status_message'),
                          ]
         [proc_trigger.add_report_value(report_value) for report_value in report_values]
 
@@ -50,6 +49,8 @@ class ServiceArchiving(Service):
     def start_archiving(self):
         started = False
         while not started:
+            if self.thread_ctrl.get_flag('starting'):
+                break
             current_config = self.get_current_planteye_config()
             if current_config is not None:
                 current_config['processors']['100_archiving'] = {

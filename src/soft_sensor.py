@@ -60,20 +60,20 @@ time.sleep(1)
 
 print('--- Start service data processing---')
 opcua_server.get_node('ns=3;s=services.data_processing.state_machine.CommandOp').set_value(4)
-time.sleep(5)
+time.sleep(3)
 
 print('--- Start service archiving---')
 opcua_server.get_node('ns=3;s=services.archiving.state_machine.CommandOp').set_value(4)
-time.sleep(5)
+time.sleep(3)
 
-print('--- Complete service data acquisition---')
-opcua_server.get_node('ns=3;s=services.raw_data_acquisition.state_machine.CommandOp').set_value(1024)
+print('--- Complete service data processing---')
+opcua_server.get_node('ns=3;s=services.data_processing.state_machine.CommandOp').set_value(1024)
 time.sleep(1)
 
 print('--- Complete service data archiving---')
 opcua_server.get_node('ns=3;s=services.archiving.state_machine.CommandOp').set_value(1024)
 time.sleep(1)
 
-print('--- Complete service data processing---')
-opcua_server.get_node('ns=3;s=services.data_processing.state_machine.CommandOp').set_value(1024)
+print('--- Complete service data acquisition---')
+opcua_server.get_node('ns=3;s=services.raw_data_acquisition.state_machine.CommandOp').set_value(1024)
 time.sleep(1)

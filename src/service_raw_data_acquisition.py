@@ -9,6 +9,7 @@ import numpy as np
 from flask import Flask, Response
 from threading import Thread
 import cv2
+import socket
 
 
 class ServiceRawDataAcquisition(Service):
@@ -107,9 +108,13 @@ class ServiceRawDataAcquisition(Service):
     def starting(self):
         print('- Starting -')
         self.apply_procedure_parameters()
-        web_server = f'{self.web_server_host}:{self.web_server_port}'
+        web_server = f'{self.get_endpoint()}:{self.web_server_port}'
         self.procedures[0].report_values['webserver_endpoint'].set_v(web_server)
         self.state_machine.start()
+
+    def get_endpoint(self):
+        hostname = socket.gethostname()
+        return socket.gethostbyname(hostname)
 
     def apply_procedure_parameters(self):
         procedure = self.procedure_control.procedures[self.procedure_control.get_procedure_cur()]
@@ -147,6 +152,7 @@ class ServiceRawDataAcquisition(Service):
 
     def start_data_acquisition(self):
         self.stop_data_acquisition_flag = False
+        self.procedures[0].report_values['webserver_endpoint'].set_v('ip-to-webserver')
         if self.procedure_control.get_procedure_cur() == 0:
             self.execute_free_run()
         elif self.procedure_control.get_procedure_cur() == 1:

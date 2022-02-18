@@ -23,8 +23,6 @@ class ServiceDataProcessing(Service):
         [proc_trigger.add_procedure_parameter(proc_param) for proc_param in proc_parameters]
         report_values = [AnaView('result', v_scl_min=-65535, v_scl_max=65536, v_unit=23),
                          AnaView('confidence_interval', v_scl_min=0, v_scl_max=100, v_unit=23),
-                         DIntView('WQC', v_scl_min=0, v_scl_max=255, v_unit=23),
-                         StringView('status_message'),
                          ]
         [proc_trigger.add_report_value(report_value) for report_value in report_values]
 
@@ -78,7 +76,7 @@ class ServiceDataProcessing(Service):
                 'type': 'tf_inference',
                 'hidden': False,
                 'parameters': {
-                    'path_to_models': '../res/models/',
+                    'path_to_models': '../models/',
                     'model_name': 'dogs_vs_cats',
                     'model_version': '1.0',
                 },
@@ -87,12 +85,15 @@ class ServiceDataProcessing(Service):
 
     def start_data_processing(self):
         started = False
-        if self.procedure_control.get_procedure_cur() == 0:
+        proc_id = self.procedure_control.get_procedure_cur()
+        if self.procedures[proc_id].procedure_parameters['model_id'].get_v_out() == 0:
             config_addon = self.pipeline_configuration_1()
         else:
             return
 
         while not started:
+            if self.thread_ctrl.get_flag('starting'):
+                break
             current_config = self.get_current_planteye_config()
             if current_config is not None:
                 for cfg_element in config_addon:
