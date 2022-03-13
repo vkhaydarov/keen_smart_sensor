@@ -31,17 +31,15 @@ class ServiceDataProcessing(Service):
     def idle(self):
         print('- Idle -')
         cycle = 0
-        while True:
-            if self.thread_ctrl.get_flag('idle'):
-                break
-            print('Cycle %i' % cycle)
+        while self.is_state('idle'):
+            print('Cycle idle %i' % cycle)
             cycle += 1
             time.sleep(1)
 
     def starting(self):
         print('- Starting -')
         self.start_data_processing()
-        self.state_machine.start()
+        self.state_change()
 
     def execute(self):
         print('- Execute -')
@@ -92,7 +90,7 @@ class ServiceDataProcessing(Service):
             return
 
         while not started:
-            if self.thread_ctrl.get_flag('starting'):
+            if not self.is_state('starting'):
                 break
             current_config = self.get_current_planteye_config()
             if current_config is not None:
@@ -139,45 +137,47 @@ class ServiceDataProcessing(Service):
 
     def completing(self):
         self.stop_processing()
-        self.state_machine.complete()
+        self.state_change()
 
     def completed(self):
         pass
 
     def pausing(self):
         self.stop_processing()
-        self.state_machine.pause()
+        self.state_change()
 
     def paused(self):
         pass
 
     def resuming(self):
         self.start_data_processing()
+        self.state_change()
 
     def holding(self):
         self.stop_processing()
-        self.state_machine.hold()
+        self.state_change()
 
     def held(self):
         pass
 
     def unholding(self):
         self.start_data_processing()
+        self.state_change()
 
     def stopping(self):
         self.stop_processing()
-        self.state_machine.stop()
+        self.state_change()
 
     def stopped(self):
         pass
 
     def aborting(self):
         self.stop_processing()
-        self.state_machine.abort()
+        self.state_change()
 
     def aborted(self):
         pass
 
     def resetting(self):
         print('- Resetting -')
-        self.state_machine.reset()
+        self.state_change()

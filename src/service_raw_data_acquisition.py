@@ -98,10 +98,8 @@ class ServiceRawDataAcquisition(Service):
     def idle(self):
         print('- Idle -')
         cycle = 0
-        while True:
-            if self.thread_ctrl.get_flag('idle'):
-                break
-            print('Cycle %i' % cycle)
+        while self.is_state('idle'):
+            print('Cycle idle %i' % cycle)
             cycle += 1
             time.sleep(1)
 
@@ -110,7 +108,7 @@ class ServiceRawDataAcquisition(Service):
         self.apply_procedure_parameters()
         web_server = f'{self.get_endpoint()}:{self.web_server_port}'
         self.procedures[0].report_values['webserver_endpoint'].set_v(web_server)
-        self.state_machine.start()
+        self.state_change()
 
     def get_endpoint(self):
         hostname = socket.gethostname()
@@ -169,49 +167,51 @@ class ServiceRawDataAcquisition(Service):
 
     def execute_snapshot(self):
         self.frame_to_show = self.get_frame()
-        self.state_machine.complete()
+        self.state_change()
 
     def completing(self):
         self.stop_data_acquisition()
-        self.state_machine.complete()
+        self.state_change()
 
     def completed(self):
         pass
 
     def pausing(self):
         self.stop_data_acquisition()
-        self.state_machine.pause()
+        self.state_change()
 
     def paused(self):
         pass
 
     def resuming(self):
         self.start_data_acquisition()
+        self.state_change()
 
     def holding(self):
         self.stop_data_acquisition()
-        self.state_machine.hold()
+        self.state_change()
 
     def held(self):
         pass
 
     def unholding(self):
         self.start_data_acquisition()
+        self.state_change()
 
     def stopping(self):
         self.stop_data_acquisition()
-        self.state_machine.stop()
+        self.state_change()
 
     def stopped(self):
         pass
 
     def aborting(self):
         self.stop_data_acquisition()
-        self.state_machine.abort()
+        self.state_change()
 
     def aborted(self):
         pass
 
     def resetting(self):
         print('- Resetting -')
-        self.state_machine.reset()
+        self.state_change()
