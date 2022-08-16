@@ -8,7 +8,7 @@ import time
 
 module = OPCUAServerPEA()
 
-planteye_endpoint = 'http://127.0.0.1:5000/'
+planteye_endpoint = 'http://192.168.0.88:5000/'
 
 # Service definition
 service_rda = ServiceRawDataAcquisition('raw_data_acquisition', 'provides webserver with frames from the camera')
@@ -64,7 +64,7 @@ time.sleep(3)
 
 print('--- Start service archiving---')
 opcua_server.get_node('ns=3;s=services.archiving.state_machine.CommandOp').set_value(4)
-time.sleep(3)
+time.sleep(60)
 
 print('--- Complete service data processing---')
 opcua_server.get_node('ns=3;s=services.data_processing.state_machine.CommandOp').set_value(1024)

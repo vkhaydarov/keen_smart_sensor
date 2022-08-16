@@ -159,6 +159,7 @@ class ServiceRawDataAcquisition(Service):
     def stop_data_acquisition(self):
         self.stop_data_acquisition_flag = True
         self.procedures[0].report_values['webserver_endpoint'].set_v('')
+        self.frame_to_show = self.place_holder_img
 
     def execute_free_run(self):
         while not self.stop_data_acquisition_flag:
