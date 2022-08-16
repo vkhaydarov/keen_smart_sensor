@@ -8,7 +8,7 @@ import time
 
 module = OPCUAServerPEA()
 
-planteye_endpoint = 'http://192.168.0.88:5000/'
+planteye_endpoint = 'http://10.6.51.140:5000/'
 
 # Service definition
 service_rda = ServiceRawDataAcquisition('raw_data_acquisition', 'provides webserver with frames from the camera')
