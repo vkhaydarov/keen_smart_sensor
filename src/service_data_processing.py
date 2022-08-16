@@ -51,32 +51,11 @@ class ServiceDataProcessing(Service):
             {
                 'name': '001_resize',
                 'type': 'image_resize',
-                'hidden': True,
+                'hidden': False,
                 'parameters': {
                     'width': 250,
                     'height': 250,
                     'interpolation': 'INTER_NEAREST',
-                },
-            },
-            {
-                'name': '002_crop',
-                'type': 'image_crop',
-                'hidden': True,
-                'parameters': {
-                    'x_init': 2,
-                    'x_diff': 248,
-                    'y_init': 2,
-                    'y_diff': 248,
-                },
-            },
-            {
-                'name': '003_inference',
-                'type': 'tf_inference',
-                'hidden': False,
-                'parameters': {
-                    'path_to_models': '../models/',
-                    'model_name': 'dogs_vs_cats',
-                    'model_version': '1.0',
                 },
             },
         ]

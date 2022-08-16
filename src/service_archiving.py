@@ -55,7 +55,7 @@ class ServiceArchiving(Service):
                     'name': 'archiver',
                     'type': 'save_on_disk',
                     'parameters': {
-                        'save_path': '../data'
+                        'save_path': '/home/pi/data'
                     }
                 }
                 started = self.set_current_planteye_config(current_config)
