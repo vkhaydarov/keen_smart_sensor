@@ -71,11 +71,11 @@ class ServiceDataProcessing(Service):
             },
             {
                 'name': '003_inference',
-                'type': 'tf_inference',
+                'type': 'pt_inference',
                 'hidden': False,
                 'parameters': {
-                    'path_to_models': '../models/',
-                    'model_name': 'dogs_vs_cats',
+                    'path_to_models': '../models',
+                    'model_name': 'cats_vs_dogs_pt',
                     'model_version': '1.0',
                 },
             },
