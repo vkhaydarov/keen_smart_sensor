@@ -53,8 +53,8 @@ class ServiceDataProcessing(Service):
                 'type': 'image_resize',
                 'hidden': True,
                 'parameters': {
-                    'width': 250,
-                    'height': 250,
+                    'width': 130,
+                    'height': 130,
                     'interpolation': 'INTER_NEAREST',
                 },
             },
@@ -64,9 +64,9 @@ class ServiceDataProcessing(Service):
                 'hidden': True,
                 'parameters': {
                     'x_init': 2,
-                    'x_diff': 248,
+                    'x_diff': 128,
                     'y_init': 2,
-                    'y_diff': 248,
+                    'y_diff': 128,
                 },
             },
             {
