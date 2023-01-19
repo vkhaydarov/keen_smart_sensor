@@ -31,20 +31,18 @@ if __name__ == '__main__':
 
     path_to_cfg = args.cfg
     if path_to_cfg is None:
-        path_to_cfg = 'res/config_deploy.yaml'
-
+        path_to_cfg = 'config_deploy.yaml'
     config_dict = read_config_file(path_to_cfg)
-
-    module = OPCUAServerPEA()
-    planteye_endpoint = config_dict['planteye_endpoint']
+    
+    module = OPCUAServerPEA(endpoint='opc.tcp://0.0.0.0:4840/')
 
     # Service definition
     service_rda = ServiceRawDataAcquisition('raw_data_acquisition', 'provides webserver with frames from the camera')
-    service_rda.set_planteye_endpoint(planteye_endpoint)
+    service_rda.set_planteye_endpoint(config_dict['planteye_endpoint'])
     module.add_service(service_rda)
 
     service_arch = ServiceArchiving('archiving', 'archives data', archiving_path=config_dict['local_archiving_path'])
-    service_arch.set_planteye_endpoint(planteye_endpoint)
+    service_arch.set_planteye_endpoint(config_dict['planteye_endpoint'])
     module.add_service(service_arch)
 
     service_data_proc = ServiceDataProcessing('data_processing', 'processes data',
@@ -52,7 +50,7 @@ if __name__ == '__main__':
     model_name=config_dict['model_name'],
     model_version=config_dict['model_version'])
 
-    service_data_proc.set_planteye_endpoint(planteye_endpoint)
+    service_data_proc.set_planteye_endpoint(config_dict['planteye_endpoint'])
     module.add_service(service_data_proc)
 
     # Start server

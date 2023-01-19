@@ -52,7 +52,7 @@ class ServiceDataProcessing(Service):
     def pipeline_configuration_1(self):
         return [
             {
-                'name': '001_resize',
+                'name': '201_resize',
                 'type': 'image_resize',
                 'hidden': True,
                 'parameters': {
@@ -62,7 +62,7 @@ class ServiceDataProcessing(Service):
                 },
             },
             {
-                'name': '002_crop',
+                'name': '202_crop',
                 'type': 'image_crop',
                 'hidden': True,
                 'parameters': {
@@ -73,7 +73,7 @@ class ServiceDataProcessing(Service):
                 },
             },
             {
-                'name': '003_inference',
+                'name': '203_inference',
                 'type': 'pt_inference',
                 'hidden': False,
                 'parameters': {
@@ -102,19 +102,22 @@ class ServiceDataProcessing(Service):
                 started = self.set_current_planteye_config(current_config)
             time.sleep(0.5)
 
+    def _drop_processor(self, config, processor_name):
+        if processor_name in config['processors']:
+            config['processors'].pop(processor_name)
+            self.set_current_planteye_config(config)
+            return config
+
     def stop_processing(self):
-        if self.procedure_control.get_procedure_cur() == 0:
-            config_addon = self.pipeline_configuration_1()
-        else:
-            return
         current_config = self.get_current_planteye_config()
         if current_config is None:
             return False
         if 'processors' not in current_config:
             return True
-        for cfg_element in config_addon:
-            if cfg_element['name'] in current_config['processors']:
-                current_config['processors'].pop(cfg_element['name'])
+        current_config = self._drop_processor(self, current_config, '201_resize')
+        current_config = self._drop_processor(self, current_config, '202_crop')
+        current_config = self._drop_processor(self, current_config, '203_inference')
+        self.set_current_planteye_config(current_config)
         return True
 
     def get_current_planteye_config(self):
