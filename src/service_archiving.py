@@ -7,10 +7,11 @@ import requests
 
 
 class ServiceArchiving(Service):
-    def __init__(self, tag_name, tag_description):
+    def __init__(self, tag_name, tag_description, archiving_path='/data'):
         super().__init__(tag_name, tag_description)
         self.planteye_endpoint = None
         self.add_procedure_trigger_based()
+        self.archiving_path = archiving_path
 
     def set_planteye_endpoint(self, planteye_endpoint):
         self.planteye_endpoint = planteye_endpoint
@@ -55,7 +56,7 @@ class ServiceArchiving(Service):
                     'name': 'archiver',
                     'type': 'save_on_disk',
                     'parameters': {
-                        'save_path': '/home/pi/data'
+                        'save_path': self.archiving_path
                     }
                 }
                 started = self.set_current_planteye_config(current_config)
@@ -67,7 +68,7 @@ class ServiceArchiving(Service):
             return False
         if 'processors' not in current_config:
             return True
-        if 'archiving' in current_config['processors']:
+        if '100_archiving' in current_config['processors']:
             current_config['processors'].pop('100_archiving')
             self.set_current_planteye_config(current_config)
             return True

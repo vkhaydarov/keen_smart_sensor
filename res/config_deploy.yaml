@@ -1,1 +1,5 @@
 planteye_endpoint: 'http://127.0.0.1:5000/'
+local_archiving_path: 'C:\work\smart_sensor\data'
+model_path: 'C:\work\smart_sensor\models'
+model_name: 'flow_regime_unimodal'
+model_version: '1.0'

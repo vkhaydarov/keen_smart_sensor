@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     path_to_cfg = args.cfg
     if path_to_cfg is None:
-        path_to_cfg = '../res/config_deploy.yaml'
+        path_to_cfg = 'res/config_deploy.yaml'
 
     config_dict = read_config_file(path_to_cfg)
 
@@ -43,11 +43,15 @@ if __name__ == '__main__':
     service_rda.set_planteye_endpoint(planteye_endpoint)
     module.add_service(service_rda)
 
-    service_arch = ServiceArchiving('archiving', 'archives data')
+    service_arch = ServiceArchiving('archiving', 'archives data', archiving_path=config_dict['local_archiving_path'])
     service_arch.set_planteye_endpoint(planteye_endpoint)
     module.add_service(service_arch)
 
-    service_data_proc = ServiceDataProcessing('data_processing', 'processes data')
+    service_data_proc = ServiceDataProcessing('data_processing', 'processes data',
+    model_path=config_dict['model_path'],
+    model_name=config_dict['model_name'],
+    model_version=config_dict['model_version'])
+
     service_data_proc.set_planteye_endpoint(planteye_endpoint)
     module.add_service(service_data_proc)
 

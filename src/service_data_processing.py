@@ -7,10 +7,13 @@ import requests
 
 
 class ServiceDataProcessing(Service):
-    def __init__(self, tag_name, tag_description):
+    def __init__(self, tag_name, tag_description, model_path, model_name, model_version):
         super().__init__(tag_name, tag_description)
         self.planteye_endpoint = None
         self.add_procedure_trigger_based()
+        self.model_path = model_path
+        self.model_name = model_name
+        self.model_version = model_version
 
     def set_planteye_endpoint(self, planteye_endpoint):
         self.planteye_endpoint = planteye_endpoint
@@ -74,9 +77,9 @@ class ServiceDataProcessing(Service):
                 'type': 'pt_inference',
                 'hidden': False,
                 'parameters': {
-                    'path_to_models': '../models',
-                    'model_name': 'cats_vs_dogs_pt',
-                    'model_version': '1.0',
+                    'path_to_models': self.model_path,
+                    'model_name': self.model_name,
+                    'model_version': self.model_version,
                 },
             },
         ]

@@ -8,7 +8,6 @@ import base64
 import numpy as np
 from flask import Flask, Response
 from threading import Thread
-import cv2
 import socket
 
 
@@ -27,7 +26,7 @@ class ServiceRawDataAcquisition(Service):
         Thread(target=self.run_webserver).start()
 
     def load_place_holder_image(self):
-        with open('../res/novid.jpg', 'rb') as img_file:
+        with open('res/novid.jpg', 'rb') as img_file:
             return img_file.read()
 
     def set_planteye_endpoint(self, planteye_endpoint):
