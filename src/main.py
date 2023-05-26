@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     path_to_cfg = args.cfg
     if path_to_cfg is None:
-        path_to_cfg = 'config_deploy.yaml'
+        path_to_cfg = 'src/config_deploy.yaml'
     config_dict = read_config_file(path_to_cfg)
     
     module = OPCUAServerPEA(endpoint='opc.tcp://0.0.0.0:4840/')

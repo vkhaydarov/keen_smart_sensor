@@ -26,7 +26,7 @@ class ServiceRawDataAcquisition(Service):
         Thread(target=self.run_webserver).start()
 
     def load_place_holder_image(self):
-        with open('novid.jpg', 'rb') as img_file:
+        with open('src/novid.jpg', 'rb') as img_file:
             return img_file.read()
 
     def set_planteye_endpoint(self, planteye_endpoint):
